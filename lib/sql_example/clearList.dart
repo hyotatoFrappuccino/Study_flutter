@@ -23,7 +23,7 @@ class _ClearListApp extends State<ClearListApp> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('완료한 일'),
+        title: const Text('완료한 일', style: TextStyle(color: Colors.purple),),
       ),
       body: Container(
         child: Center(
@@ -37,35 +37,67 @@ class _ClearListApp extends State<ClearListApp> {
                 case ConnectionState.active:
                   return CircularProgressIndicator();
                 case ConnectionState.done:
-                  return ListView.builder(
-                      itemBuilder: (context, index) {
-                        Todo todo = (snapshot.data as List<Todo>)[index];
-                        return ListTile(
-                          title: Text(
-                            todo.title!,
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          subtitle: Container(
-                            child: Column(
-                              children: <Widget>[
-                                Text(todo.content!),
-                                Container(
-                                  height: 1,
-                                  color: Colors.blue,
-                                ),
-                              ],
+                  if (snapshot.hasData) {
+                    return ListView.builder(
+                        itemBuilder: (context, index) {
+                          Todo todo = (snapshot.data as List<Todo>)[index];
+                          return ListTile(
+                            title: Text(
+                              todo.title!,
+                              style: TextStyle(fontSize: 20),
                             ),
-                          ),
-                        );
-                      }
-                    itemCount: (snapshot.data as List<Todo>).length,
+                            subtitle: Container(
+                              child: Column(
+                                children: <Widget>[
+                                  Text(todo.content!),
+                                  Container(
+                                    height: 1,
+                                    color: Colors.blue,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                        itemCount: (snapshot.data as List<Todo>)
+                        .length,
                   );
+                }
+                return Text('No data', style: TextStyle(fontSize: 50, color: Colors.red));
               }
-              return Text('No data');
-            }
+            },
             future: clearList,
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('완료한 일 삭제'),
+                content: Text('완료한 일을 모두 삭제할까요?'),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(true);
+                    },
+                    child: Text('예')),
+                  TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop(false);
+                      },
+                      child: Text('아니요')),
+                ],
+              );
+            },
+          );
+          if (result == true) {
+            _removeAllTodos();
+          }
+        },
+        child: Icon(Icons.remove),
       ),
     );
   }
@@ -80,6 +112,14 @@ class _ClearListApp extends State<ClearListApp> {
         content: maps[i]['content'].toString(),
         id: maps[i]['id'],
       );
+    });
+  }
+
+  void _removeAllTodos() async {
+    final Database database = await widget.database;
+    database.rawDelete('delete from todos where active=1');
+    setState(() {
+      clearList = getClearList();
     });
   }
 }
