@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'sendDataExample.dart';
 
 void main() => runApp(MyApp());
 
@@ -37,6 +38,7 @@ class NativeApp extends StatefulWidget {
 class _NativeApp extends State<NativeApp> {
   // 안드로이드와 통신 채널로 사용할 MethodChannel
   static const platform = const MethodChannel('com.flutter.dev/info');
+  static const platform3 = const MethodChannel('com.flutter.dev/dialog');
   String _deviceInfo = 'Unknown info';
 
   @override
@@ -47,10 +49,24 @@ class _NativeApp extends State<NativeApp> {
       ),
       body: Container(
         child: Center(
-          child: Text(
-            _deviceInfo,
-            style: TextStyle(fontSize: 30),
+          child: Column(
+            children: [
+              Text(
+                _deviceInfo,
+                style: TextStyle(fontSize: 30),
+              ),
+              TextButton(
+                onPressed: () {
+                  _showDialog();
+                },
+                child: Text('네이티브 창 열기')
+              ),
+            ],
           ),
+          // child: Text(
+          //   _deviceInfo,
+          //   style: TextStyle(fontSize: 30),
+          // ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -74,6 +90,12 @@ class _NativeApp extends State<NativeApp> {
     setState(() {
       _deviceInfo = deviceInfo;
     });
+  }
+
+  Future<void> _showDialog() async {
+    try {
+      await platform3.invokeMethod('showDialog');
+    } on PlatformException catch (e) {}
   }
 }
 
